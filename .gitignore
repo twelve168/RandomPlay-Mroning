@@ -1,0 +1,18 @@
+# OS / 编辑器垃圾
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 常见但本项目用不到的产物
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
