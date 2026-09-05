@@ -37,8 +37,8 @@
 >> 90度为完全静止
 ### ESPHome版本（仓库下esphome-randmron.yaml文件）
 > 需先安装Home Assistant及其插件ESPHome
-
 - 在"开启窗帘"与"关闭窗帘"按钮组件根据自己需要调整映射角度和持续时间
+- 建议在HA上安装scheduler-card和Scheduler-component插件进行定时任务
 
 ### Arduino版本（仓库下arduino-randmron文件夹）
 - 通过BLE协议与硬件通讯
