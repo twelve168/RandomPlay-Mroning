@@ -9,10 +9,28 @@ desktop.ini
 *.swp
 *.swo
 
+# ESPHome secrets —— 绝不提交真实凭据
+firmware/esphome/secrets.yaml
+
+# ESPHome / Arduino 构建产物
+firmware/esphome/.esphome/
+*.bin
+*.elf
+*.map
+build/
+
+# Python（CI / ESPHome CLI 工具链）
+__pycache__/
+*.pyc
+.venv/
+
+# 3D 打印切片产物（中间格式）
+*.gcode
+*.3mf
+
 # 常见但本项目用不到的产物
 node_modules/
 dist/
-build/
 .env
 .env.*
 !.env.example

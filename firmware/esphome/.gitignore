@@ -1,0 +1,3 @@
+# ESPHome 工作目录（构建缓存与本地 secrets），工具自动生成
+/.esphome/
+/secrets.yaml

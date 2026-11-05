@@ -1,0 +1,18 @@
+# CI: yamllint, ESPHome 配置校验, Arduino 固件编译
+# 基于本仓库 CI 精简的单机验证配置
+
+files:
+  - ".github/workflows/ci.yml"
+  - "firmware/esphome/curtain-machine.yaml"
+  - "firmware/esphome/secrets.example.yaml"
+
+rules:
+  line-length:
+    max: 160
+    level: warning
+  document-start:
+    present: false
+  comments:
+    require-starting-space: true
+  truthy:
+    check-keys: false

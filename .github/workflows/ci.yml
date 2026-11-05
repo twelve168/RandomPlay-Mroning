@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # ---------------------------------------------------------------
+  # 1. YAML 规范性检查
+  # ---------------------------------------------------------------
+  yaml-lint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Run yamllint
+        run: yamllint -s .
+
+  # ---------------------------------------------------------------
+  # 2. ESPHome 配置校验（不烧录，仅验证可编译性）
+  # ---------------------------------------------------------------
+  esphome-config:
+    name: ESPHome config check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Provide secrets stub (random valid key)
+        working-directory: firmware/esphome
+        run: |
+          cp secrets.example.yaml secrets.yaml
+          python -c "import base64, os; \
+          p='secrets.yaml'; s=open(p,encoding='utf-8').read(); \
+          k=base64.b64encode(os.urandom(32)).decode(); \
+          open(p,'w',encoding='utf-8',newline='\n').write(\
+          s.replace('REPLACE_WITH_BASE64_44_CHAR_KEY==', k))"
+
+      - name: Validate ESPHome config
+        uses: esphome/build-action@v3
+        with:
+          yaml_file: firmware/esphome/curtain-machine.yaml
+
+  # ---------------------------------------------------------------
+  # 3. Arduino 固件编译冒烟测试
+  # ---------------------------------------------------------------
+  arduino-build:
+    name: Arduino compile (ESP32-C3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install arduino-cli
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh \
+            | BINDIR=/usr/local/bin sh
+          arduino-cli config init \
+            --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+
+      - name: Install ESP32 core and libraries
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+          arduino-cli lib install ESP32Servo
+
+      - name: Compile sketch
+        run: |
+          arduino-cli compile \
+            --fqbn esp32:esp32:esp32c3 \
+            --warnings default \
+            --build-property \
+            "compiler.cpp.extra_flags=-DARDUINO_USB_CDC_ON_BOOT=1" \
+            firmware/arduino/arduino-randmron.ino

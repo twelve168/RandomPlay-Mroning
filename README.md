@@ -1,94 +1,131 @@
-# ￥17低成本自动窗帘机项目，RandomPlay-Mroning
-> 这是26年暑假我为了调节作息做的自动窗帘机项目，成本仅17元，研发总成本仅40元
+<div align="center">
 
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/b82c1e4c60fa027ac0ada0ae37fbac46_720.jpg)
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/b4b694caf5948c8ceacdd4bd7a9d51a1_720.jpg)
-## 3D模型展示
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/fusion2609041821.png)
-- 适配23mm以内宽的方形窗帘轨道
-    - 如需适配更宽或圆轨则需自行修改建模
+# RandomPlay-Mroning
 
-- 使用M2 20mm螺丝钉对轮子进行固定
+**￥17 成本的 DIY 自动窗帘机** · ESP32-C3 + 360° SG90 · 3D 打印全结构
 
-- 在轮子上粘一圈胶带增加摩擦力
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=github-actions)](.github/workflows/ci.yml)
+[![Platform](https://img.shields.io/badge/Platform-ESP32--C3-000?logo=espressif)](https://www.espressif.com/en/products/socs/esp32-c3)
+[![Firmware](https://img.shields.io/badge/Firmware-ESPHome%20%7C%20Arduino-informational)](firmware/)
 
-- 挂一个塑料袋，里面放上配重物体（如矿泉水）
-
-- 建议使用深色耗材打印，或提前使用遮光胶带避免ESP32电源指示LED光污染
-## 硬件连接
-### 杜邦线连接
-| SG90 | ESP32 |
-|:-----|-----:|
-|PWM|GPIO7|
-|VCC|5V|
-|GND|GND|
-
-- 准备ESP32-C3-SuperMini开发板 和 360度版本SG90舵机，切勿买成180度版本
-- 插入ESP32的C口供电 
-- 实物图版本与此仓库上传版本不一致，请以此仓库文档为准
-
-## 软件说明
-> 度数映射到360度舵机上为旋转方向与速度
->> 
->> 小于90度为顺时针旋转，越趋近0度越快
->> 
->> 大于90度为逆时针旋转，越趋近180度越快
->> 
->> 90度为完全静止
-### ESPHome版本（仓库下esphome-randmron.yaml文件）
-> 需先安装Home Assistant及其插件ESPHome
-- 在"开启窗帘"与"关闭窗帘"按钮组件根据自己需要调整映射角度和持续时间
-- 建议在HA上安装scheduler-card和Scheduler-component插件进行定时任务
-
-### Arduino版本（仓库下arduino-randmron文件夹）
-- 通过BLE协议与硬件通讯
-> 调试阶段可使用nRF Connect软件连接控制
-#### BLE控制语法
-- 即时控制：R+映射度数+持续时间
->> 如R180 5000（逆时针最快速度旋转持续5000ms）
-- 设置持续状态：D+映射度数
->> 如D180（持续以逆时针最快速度旋转）
-- 定时任务：M+时间+映射度数+持续时间
->> 如M1145 180 5000（在下一个11:45时逆时针最快速度旋转持续5000ms）
->>
->>一次性任务，执行后第二天不再执行
-- 校准时间：T+年月日时分
->> 如T2603261145（校准当前时间为2026.03.26 11:45）
-- 删除定时任务：S+时间
->> 如S1145（删除11:45的定时任务）
+</div>
 
 ---
 
-老大我们这么努力的写开源文档真的有人复刻吗
+## 项目简介
 
-以下是一些无用的研发经历描述
-这个暑假的8月，我刚放弃我的一代外置绳驱灵巧手项目，原因是结构建模过于复杂，算法过于抽象。我开始打算调节作息，所以需要一个自动窗帘机
+RandomPlay-Mroning 是一台为**调节作息**而生的自动窗帘机：整机直接挂在窗帘
+轨道上，以摩擦驱动方式推拉窗帘，**BOM 成本仅 ￥17**（同期市售成品约 ￥70）。
+硬件为 ESP32-C3 Super Mini + 360° 连续旋转 SG90，结构件全部 3D 打印，
+提供 **ESPHome / Arduino BLE 双固件方案**，可接入 Home Assistant 或纯本地
+BLE 直连控制。
 
-于是我首先提出RandomPlay DIY智能家居系列计划，并开始研发这个系列的第一个项目：窗帘机RandomPlay-Mronng
+| | |
+|---|---|
+| 整机成本 | **￥17**（研发损耗全程共 ￥40，含报废一块开发板 + 两个舵机） |
+| 结构版本 | v5.2（历经 6 个硬件版本的机械迭代，见[研发迭代史](docs/design-history.md)） |
+| 适配轨道 | ≤ 23 mm 宽方形轨道（圆轨需自行改模） |
+| 固件方案 | ESPHome（HA 集成）/ Arduino（BLE 直连，二选一） |
 
+![成品图 1](images/b82c1e4c60fa027ac0ada0ae37fbac46_720.jpg)
+![成品图 2](images/b4b694caf5948c8ceacdd4bd7a9d51a1_720.jpg)
 
-我选择DIY而不是购买成品或使用现成开源项目的原因是市面上的窗帘机普遍价格在￥70左右，而开源项目寥寥无几并且多数很贵、很石、很复杂
+### 3D 模型
 
-v1我把设备挂在墙上，用电机旋转带动收紧鱼线去拉开窗帘，失败原因是鱼线容易打结或卡住电机
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/3f81583922b20b74d60b699e1923a110_720.jpg)
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/f7f35edc88bc4a12efcbb2a83b7e5bbf_720.jpg)
+![Fusion 360 模型](images/fusion2609041821.png)
 
+模型源文件（Fusion 360）与通用 STEP 格式见 [cad/](cad/) 目录。
 
-v2我把设备挂在窗帘轨道上，用橡皮筋使轮子紧贴轨道有足够摩擦力，但发现拓补学问题，橡皮筋没法套住设备，于是我通过打钉子暂时作为补丁修复了这个问题。
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/e5531f9b781018b7c2be051e63ec857e_720.jpg)
+## 快速开始
 
-v2到这里还有问题，设备在轨道上跑不动，我认为是下半部分没有轮子导致的，于是v3在下半部分也加了轮子，顺便彻底修好了橡皮筋套不上的问题
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/893e3b519165873c25429b14ad0f976a_720.jpg)
+1. 按[物料清单](docs/bom.md)备料 —— ⚠️ 舵机务必选 **360° 连续旋转版**，180° 版无法工作
+2. 打印 [cad/](cad/) 中的结构件并按[装配指南](docs/assembly.md)组装
+3. 按下表选择固件方案并烧录：
 
-但我发现仍然跑不动，我认为是橡皮筋太紧的的原因，于是v4我去掉了上下部分之分，直接挂在轨道上。但又因摩擦力低跑不起来，我额外做了一个补丁结构挂载配重增加摩擦力；又因前后副轮容易作为支点让主轮悬空，所以我去除了所有副轮。到这里已经能用了，但因为不小心烧了一个电机需要重新拆开，索性重新翻了一版（（
-![](https://raw.githubusercontent.com/twelve168/RandomPlay-Mroning/main/image/debf3f82c5bbcd7815cef242de838e63_720.jpg)
+| 需求 | 推荐固件 | 入口 |
+|------|----------|------|
+| 已有 Home Assistant，要定时/自动化 | **ESPHome 版** | [`firmware/esphome/`](firmware/esphome/) |
+| 无网关，手机 BLE 直连控制 | **Arduino BLE 版** | [`firmware/arduino/`](firmware/arduino/) |
 
-v5也就是我最上面放的实物图，去掉副轮，把配重挂钩集成到一起，使得整体耗材最低。但很快发现轮子切向力不足推动窗帘很吃力还有烧电机的风险，于是我把主轮直径改小增加切向力作为补丁直接换了上去，这个版本研发时我还发现接线端子比手动焊接好用多了（（，然后就做出了v5.1，也就是我现在还在用的版本
+### ESPHome 版
 
-但又发现明明可以通过C口供电为什么还要多接电线，所以很久之后的今天我为了开源项目把模型改了，做了v5.2，顺便把模型完全适配了小直径轮子，便是现在上传的这个仓库版本了
+1. 安装 Home Assistant 及其 ESPHome 插件
+2. 复制 `firmware/esphome/secrets.example.yaml` 为 `secrets.yaml` 并填入真实凭据
+3. 编译烧录 `firmware/esphome/curtain-machine.yaml`
+4. 按自家窗帘行程调整 substitutions 中的 `curtain_travel_ms`（默认 10000 ms）
+5. 定时任务推荐在 HA 上安装 [scheduler-card](https://github.com/nielsfaber/scheduler-card)
+   与 [scheduler-component](https://github.com/nielsfaber/scheduler-component) 配套使用
 
-研发中炸了一块开发板和俩舵机还有一堆打印模型，研发成本加上成品成本共40元，因为有pdd优惠劵（）我将贯彻穷鬼命途
+### Arduino BLE 版
 
-暑假内我接触到HA后又扩展研发了RandomPlay这个智能家居系列的几个项目，IR＆RF收发器、插销门锁控制器、RF遥控器桥接ESP32。后续这个系列还有部署在本地服务器上的房间内语音控制agent间接控制HA相关软件项目，可能会用现成项目也可能会自己研发。上述这些后续可能也会陆续开源到github上。
+固件提供纯本地 BLE 控制协议（无需 Wi-Fi），支持即时旋转、持续保持、
+单次定时任务与 RTC 校准。完整指令集见 [docs/ble-protocol.md](docs/ble-protocol.md)：
 
-v5.2 260904
+```text
+R180 5000      # 逆时针全速旋转 5000 ms，到期自动归中
+D180           # 持续逆时针全速旋转
+M1145 180 5000 # 下一个 11:45 执行一次性动作
+S1145          # 删除 11:45 的定时任务
+T2603261145    # RTC 校准为 2026-03-26 11:45
+```
+
+调试阶段可用 nRF Connect 手写指令验证。
+
+## 360° 舵机角度语义（两套固件通用）
+
+| 角度 | 行为 |
+|------|------|
+| `< 90°` | 顺时针旋转，越趋近 0° 转速越快 |
+| `= 90°` | 完全静止 |
+| `> 90°` | 逆时针旋转，越趋近 180° 转速越快 |
+
+## 仓库结构
+
+```text
+.
+├── cad/                  # 3D 模型 (Fusion 360 .f3d + 通用 .step)
+├── docs/                 # BOM / 装配 / BLE 协议 / 研发迭代史
+├── firmware/
+│   ├── arduino/          # Arduino BLE 直连固件
+│   └── esphome/          # ESPHome (Home Assistant) 固件 + secrets 模板
+├── images/               # 实物与模型截图
+├── .github/workflows/    # CI: YAML lint + 固件配置/编译校验
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+└── LICENSE               # MIT
+```
+
+## 装配提示（完整步骤见 [docs/assembly.md](docs/assembly.md)）
+
+- 主动轮用 M2 × 20 mm 螺丝固定，轮面粘一圈胶带增加摩擦
+- 挂载配重（如矿泉水）压紧主动轮 —— 摩擦驱动的核心
+- 建议深色耗材打印或用遮光胶带遮挡 ESP32 电源 LED
+- 实物图版本与本仓库上传版本不一致，以本仓库文档为准
+
+## 技术要点
+
+- **摩擦驱动取力**：无皮带/鱼线等传动件，靠配重将主动轮压紧轨道直接
+  推拉，成本与故障点最小化（v1 鱼线方案的教训，见[研发迭代史](docs/design-history.md)）
+- **小轮径主动轮**：扭矩恒定下切向力与轮径成反比，避免推帘吃力与
+  堵转烧电机（v5.1 关键改进）
+- **非阻塞 BLE 状态机**：写回调仅更新状态变量，归中判定在主循环
+  `millis()` 中完成，不阻塞 BLE 栈
+- **双固件架构**：同一硬件，ESPHome 走 HA 生态（NTP 对时、scheduler
+  定时），Arduino 版走无网关 BLE 直连（RTC + 单次定时任务）
+- **CI 固件校验**：每次提交自动对 ESPHome YAML 做 config 校验、
+  Arduino 固件做 arduino-cli 编译冒烟测试
+
+## Roadmap
+
+RandomPlay 是一个 DIY 低成本智能家居系列，本仓库为系列第一个项目。
+后续计划开源：IR & RF 收发器、插销门锁控制器、RF 遥控器桥接、本地
+语音控制 agent（见[研发迭代史](docs/design-history.md)末表）。
+
+## 贡献
+
+欢迎 issue / PR，参与方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 许可证
+
+[MIT License](LICENSE) © 2026 twelve168

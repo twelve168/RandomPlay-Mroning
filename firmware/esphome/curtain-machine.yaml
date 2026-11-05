@@ -1,0 +1,278 @@
+# =====================================================================
+# RandomPlay-Mroning 自动窗帘机 — ESPHome 固件
+#
+# 目标硬件: ESP32-C3 Super Mini (4 MB flash)
+# 舵机:     SG90 360° 连续旋转版本 (非 180° 位置版)
+# 接线:     PWM -> GPIO7 | VCC -> 5V | GND -> GND
+#
+# 使用前:
+#   1. 将 secrets.yaml 复制自 secrets.example.yaml 并填入真实凭据
+#   2. 通过 Home Assistant 的 ESPHome 插件或 esphome CLI 编译烧录
+#
+# 360° 连续舵机的角度语义 (重要):
+#   < 90°  顺时针旋转，越接近 0° 转速越快
+#   > 90°  逆时针旋转，越接近 180° 转速越快
+#   = 90°  完全静止 (默认中位)
+# =====================================================================
+
+substitutions:
+  device_name: randmron-curtain-machine
+  device_friendly_name: "Mroning 窗帘机"
+  # 一键开/关窗帘的持续时长 (ms)，按自家窗帘行程长度调整
+  curtain_travel_ms: "10000"
+  open_speed_angle: "180"    # 全速开
+  close_speed_angle: "0"     # 全速关
+  servo_stop_angle: "90"     # 停止
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${device_friendly_name}
+
+esp32:
+  board: esp32-c3-devkitm-1
+  variant: esp32c3
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: !secret randmron__api_key
+  actions:
+    # 供 Home Assistant 自动化直接调用的入口
+    - action: rotate_temporary
+      variables:
+        angle: float
+        duration: int
+      then:
+        - script.execute:
+            id: rotate_and_return
+            target_angle: angle
+            duration_ms: duration
+
+ota:
+  - platform: esphome
+    password: !secret randmron__ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: ${device_name}
+    password: !secret randmron_ap
+captive_portal:
+
+# =====================================================================
+# SG90 舵机控制
+# =====================================================================
+
+# PWM 输出: 50 Hz 为 SG90 标准帧率 (20 ms 周期)
+output:
+  - platform: ledc
+    id: pwm_output
+    pin: GPIO7
+    frequency: 50 Hz
+
+servo:
+  - id: my_servo
+    output: pwm_output
+    min_level: 2.5%    # 0°   (0.5 ms / 20 ms)
+    max_level: 12.5%   # 180° (2.5 ms / 20 ms)
+    idle_level: 7.5%   # 90°  (1.5 ms / 20 ms) — 360° 舵机的停止位
+    transition_length: 300ms
+
+# 状态文本传感器: 显示最近一次动作
+text_sensor:
+  - platform: template
+    name: "历史 (history)"
+    id: servo_status
+    lambda: |-
+      return {"当前舵机状态"};
+
+# 三态选择器: 开 / 停 / 关
+select:
+  - platform: template
+    name: "三态控制 (mode)"
+    id: servo_mode
+    icon: "mdi:toggle-switch"
+    options:
+      - "閉める (Close)"
+      - "止まって (Stop)"
+      - "開ける (Open)"
+    initial_option: "止まって (Stop)"
+    optimistic: true
+    set_action:
+      - if:
+          condition:
+            lambda: 'return x == "閉める (Close)";'
+          then:
+            - servo.write:
+                id: my_servo
+                level: -100%
+            - text_sensor.template.publish:
+                id: servo_status
+                state: "閉める - 0°"
+      - if:
+          condition:
+            lambda: 'return x == "止まって (Stop)";'
+          then:
+            - servo.write:
+                id: my_servo
+                level: 0%
+            - text_sensor.template.publish:
+                id: servo_status
+                state: "止まって - 90°"
+      - if:
+          condition:
+            lambda: 'return x == "開ける (Open)";'
+          then:
+            - servo.write:
+                id: my_servo
+                level: 100%
+            - text_sensor.template.publish:
+                id: servo_status
+                state: "開ける - 180°"
+
+# 数值输入框
+number:
+  # 角度保持: 写入后持续输出该角度 (D 指令的 HA 等价物)
+  - platform: template
+    name: "持续角度 (keep)"
+    id: set_angle_hold
+    min_value: 0
+    max_value: 180
+    step: 1
+    unit_of_measurement: "°"
+    mode: box
+    optimistic: true
+    set_action:
+      then:
+        - servo.write:
+            id: my_servo
+            level: !lambda |-
+              return ((x / 180.0) * 200.0 - 100.0);
+        - text_sensor.template.publish:
+            id: servo_status
+            state: !lambda |-
+              char buf[32];
+              snprintf(buf, sizeof(buf), "保持 %.0f°", x);
+              return std::string(buf);
+
+  # 即时控制: 角度
+  - platform: template
+    name: "即时控制-角度 (angle)"
+    id: temp_rotate_angle
+    min_value: 0
+    max_value: 180
+    step: 1
+    unit_of_measurement: "°"
+    mode: box
+    optimistic: true
+    restore_value: true
+
+  # 即时控制: 时长
+  - platform: template
+    name: "即时控制-时长 (time)"
+    id: temp_rotate_duration
+    min_value: 1
+    max_value: 50000
+    step: 500
+    unit_of_measurement: "ms"
+    mode: box
+    optimistic: true
+    restore_value: true
+
+# 按钮组件
+button:
+  # 执行一次"角度 + 时长"的组合动作
+  - platform: template
+    name: "即时控制-执行 (switch)"
+    on_press:
+      then:
+        - script.execute:
+            id: rotate_and_return
+            target_angle: !lambda 'return id(temp_rotate_angle).state;'
+            duration_ms: !lambda 'return (int)id(temp_rotate_duration).state;'
+        - text_sensor.template.publish:
+            id: servo_status
+            state: !lambda |-
+              char buf[64];
+              snprintf(buf, sizeof(buf), "临时 %.0f° (%.0f ms)",
+                       id(temp_rotate_angle).state,
+                       id(temp_rotate_duration).state);
+              return std::string(buf);
+
+  # 一键开窗帘
+  - platform: template
+    name: "打开窗帘 (oc-open)"
+    icon: "mdi:curtains"
+    on_press:
+      then:
+        - script.execute:
+            id: rotate_and_return
+            target_angle: ${open_speed_angle}
+            duration_ms: ${curtain_travel_ms}
+        - text_sensor.template.publish:
+            id: servo_status
+            state: !lambda |-
+              char buf[64];
+              snprintf(buf, sizeof(buf), "快速开门 - %s° (%s ms)",
+                       "${open_speed_angle}", "${curtain_travel_ms}");
+              return std::string(buf);
+
+  # 一键关窗帘
+  - platform: template
+    name: "关闭窗帘 (oc-close)"
+    icon: "mdi:curtains-closed"
+    on_press:
+      then:
+        - script.execute:
+            id: rotate_and_return
+            target_angle: ${close_speed_angle}
+            duration_ms: ${curtain_travel_ms}
+        - text_sensor.template.publish:
+            id: servo_status
+            state: !lambda |-
+              char buf[64];
+              snprintf(buf, sizeof(buf), "快速关门 - %s° (%s ms)",
+                       "${close_speed_angle}", "${curtain_travel_ms}");
+              return std::string(buf);
+
+# 脚本: 旋转到特定角度，持续特定时间后归中
+script:
+  - id: rotate_and_return
+    mode: restart
+    parameters:
+      target_angle: float
+      duration_ms: int
+    then:
+      - logger.log:
+          format: "旋转到 %.1f 度，持续 %d ms"
+          args: ['target_angle', 'duration_ms']
+
+      - servo.write:
+          id: my_servo
+          level: !lambda |-
+            return ((target_angle / 180.0) * 200.0 - 100.0);
+
+      - text_sensor.template.publish:
+          id: servo_status
+          state: !lambda |-
+            char buf[64];
+            snprintf(buf, sizeof(buf),
+                     "临时 %.0f° (%d ms)", target_angle, duration_ms);
+            return std::string(buf);
+
+      - delay: !lambda |-
+          return duration_ms;
+
+      - logger.log: "归中到 90 度"
+      - servo.write:
+          id: my_servo
+          level: 0%
+
+      - text_sensor.template.publish:
+          id: servo_status
+          state: "已归中 - 90°"
