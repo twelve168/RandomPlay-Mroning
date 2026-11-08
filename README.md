@@ -16,7 +16,7 @@
 ## 项目简介
 
 RandomPlay-Mroning是一台为**调节作息**而生的自动窗帘机：整机直接挂在窗帘
-轨道上，以摩擦驱动方式推拉窗帘，**BOM成本仅￥15**（同期市售成品约￥70）。
+轨道上，以摩擦驱动方式推拉窗帘，**BOM成本仅￥15**（市售成品约￥70）。
 硬件为ESP32-C3 Super Mini + 360°连续旋转SG90，结构件全部3D打印，
 提供 **ESPHome / Arduino BLE双固件方案**，可接入Home Assistant或纯本地
 BLE直连控制。
@@ -119,7 +119,7 @@ T2603261145    # RTC校准为2026-03-26 11:45
 ## Roadmap
 
 RandomPlay是一个DIY低成本智能家居系列，本仓库为系列第一个项目（见
-[研发迭代史](docs/design-history.md)末表）。
+[研发迭代史](docs/design-history.md)末表）。该系列其它项目见个人主页。
 
 ## 贡献
 
