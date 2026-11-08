@@ -26,7 +26,7 @@
 - 新增 `CHANGELOG.md`、`CONTRIBUTING.md`，扩展 `.gitignore`
   （secrets、固件产物）
 
-## [v5.2] - 2026-09-04
+## [v5.2] - 2026-11-08
 
 ### Added
 
