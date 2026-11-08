@@ -2,7 +2,7 @@
 
 # RandomPlay-Mroning
 
-**￥17成本的DIY自动窗帘机** · ESP32-C3 + 360° SG90 · 3D打印全结构
+**￥15成本的DIY自动窗帘机** · ESP32-C3 + 360° SG90 · 3D打印全结构
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=github-actions)](.github/workflows/ci.yml)
@@ -16,14 +16,14 @@
 ## 项目简介
 
 RandomPlay-Mroning是一台为**调节作息**而生的自动窗帘机：整机直接挂在窗帘
-轨道上，以摩擦驱动方式推拉窗帘，**BOM成本仅￥17**（同期市售成品约￥70）。
+轨道上，以摩擦驱动方式推拉窗帘，**BOM成本仅￥15**（同期市售成品约￥70）。
 硬件为ESP32-C3 Super Mini + 360°连续旋转SG90，结构件全部3D打印，
 提供 **ESPHome / Arduino BLE双固件方案**，可接入Home Assistant或纯本地
 BLE直连控制。
 
 | | |
 |---|---|
-| 整机成本 | **￥17**（研发损耗全程共￥40，含报废一块开发板 + 两个舵机） |
+| 整机成本 | **￥15**（研发损耗全程共￥40，含报废一块开发板 + 两个舵机） |
 | 结构版本 | v5.2（历经6个硬件版本的机械迭代，见[研发迭代史](docs/design-history.md)） |
 | 适配轨道 | ≤ 23 mm宽方形轨道（圆轨需自行改模） |
 | 固件方案 | ESPHome（HA集成）/ Arduino（BLE直连，二选一） |
@@ -118,9 +118,8 @@ T2603261145    # RTC校准为2026-03-26 11:45
 
 ## Roadmap
 
-RandomPlay是一个DIY低成本智能家居系列，本仓库为系列第一个项目。
-后续计划开源：IR & RF收发器、插销门锁控制器、RF遥控器桥接、本地
-语音控制agent（见[研发迭代史](docs/design-history.md)末表）。
+RandomPlay是一个DIY低成本智能家居系列，本仓库为系列第一个项目（见
+[研发迭代史](docs/design-history.md)末表）。
 
 ## 贡献
 
@@ -129,3 +128,7 @@ RandomPlay是一个DIY低成本智能家居系列，本仓库为系列第一个�
 ## 许可证
 
 [MIT License](LICENSE) © 2026 twelve168
+
+---
+
+v5.2 261108
